@@ -17,6 +17,8 @@ import juloo.keyboard2.Config;
 import juloo.keyboard2.KeyValue;
 import juloo.keyboard2.Pointers;
 import juloo.keyboard2.R;
+import juloo.keyboard2.ThemeApplier;
+import juloo.keyboard2.ThemeSpec;
 import juloo.keyboard2.dict.SupportedDictionaries;
 
 public class CandidatesView extends LinearLayout
@@ -113,6 +115,21 @@ public class CandidatesView extends LinearLayout
     else
       _lang_name_view.setText(
           sd.get_display_name(config.current_dictionary_name));
+    apply_theme(config.custom_theme);
+  }
+
+  /** Override the colours of a custom theme. The views resolve their colours
+      from theme attributes when they are inflated, so they would otherwise
+      keep the colours of the base theme. */
+  void apply_theme(ThemeSpec spec)
+  {
+    if (spec == null)
+      return;
+    for (int i = 0; i < _item_views.length; i++)
+      ThemeApplier.text(_item_views[i], spec, ThemeSpec.Role.colorLabel);
+    ThemeApplier.text(_lang_name_view, spec, ThemeSpec.Role.colorSubLabel);
+    if (_status_no_dict != null)
+      ThemeApplier.text(_status_no_dict, spec, ThemeSpec.Role.colorLabel);
   }
 
   /** Set the height of the suggestion row and the text size. */

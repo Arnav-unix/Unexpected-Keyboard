@@ -65,8 +65,8 @@ public class Keyboard2View extends View
   public Keyboard2View(Context context, AttributeSet attrs)
   {
     super(context, attrs);
-    _theme = new Theme(getContext(), attrs);
     _config = Config.globalConfig();
+    _theme = new Theme(getContext(), attrs, _config.custom_theme);
     _pointers = new Pointers(this, _config);
     refresh_navigation_bar(context);
     setOnTouchListener(this);

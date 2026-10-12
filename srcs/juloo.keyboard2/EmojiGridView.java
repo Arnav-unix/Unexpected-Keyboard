@@ -28,6 +28,7 @@ public class EmojiGridView extends GridView
   private List<Emoji> _emojiArray;
   private HashMap<Emoji, Integer> _lastUsed;
 
+
   /*
    ** TODO: adapt column width and emoji size
    ** TODO: use ArraySet instead of Emoji[]
@@ -46,6 +47,8 @@ public class EmojiGridView extends GridView
     _emojiArray = (group == GROUP_LAST_USE) ? getLastEmojis() : Emoji.getEmojisByGroup(group);
     setAdapter(new EmojiViewAdpater(getContext(), _emojiArray));
   }
+
+
 
   public void onItemClick(AdapterView<?> parent, View v, int pos, long id)
   {
@@ -158,6 +161,8 @@ public class EmojiGridView extends GridView
       if (view == null)
         view = new EmojiView(_button_context);
       view.setEmoji(_emojiArray.get(pos));
+      ThemeApplier.text(view, Config.globalConfig().custom_theme,
+          ThemeSpec.Role.emojiColor);
       return view;
     }
   }

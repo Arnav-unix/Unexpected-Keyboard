@@ -32,6 +32,7 @@ public class EmojiGroupButtonsBar extends LinearLayout
         new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT, 1.f));
   }
 
+
   EmojiGridView get_emoji_grid()
   {
     if (_emoji_grid == null)
