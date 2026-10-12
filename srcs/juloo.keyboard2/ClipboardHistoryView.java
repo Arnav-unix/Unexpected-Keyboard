@@ -84,7 +84,11 @@ public final class ClipboardHistoryView extends NonScrollListView
     public View getView(final int pos, View v, ViewGroup _parent)
     {
       if (v == null)
+      {
         v = View.inflate(getContext(), R.layout.clipboard_history_entry, null);
+        ThemeApplier.text(v.findViewById(R.id.clipboard_entry_text),
+            Config.globalConfig().custom_theme, ThemeSpec.Role.colorLabel);
+      }
       ((TextView)v.findViewById(R.id.clipboard_entry_text))
         .setText(_history.get(pos));
       v.findViewById(R.id.clipboard_entry_addpin).setOnClickListener(

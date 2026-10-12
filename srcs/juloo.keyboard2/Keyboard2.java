@@ -162,6 +162,8 @@ public class Keyboard2 extends InputMethodService
     _keyboard_container_view = (ViewGroup)inflate_view(R.layout.keyboard);
     _keyboard_layout_view = (Keyboard2View)_keyboard_container_view.findViewById(R.id.keyboard_view);
     _candidates_view = (CandidatesView)_keyboard_container_view.findViewById(R.id.candidates_view);
+    ThemeApplier.background(_keyboard_container_view,
+        _config.custom_theme, ThemeSpec.Role.colorKeyboard);
   }
 
   InputMethodManager get_imm()
@@ -225,10 +227,13 @@ public class Keyboard2 extends InputMethodService
   private void refresh_config()
   {
     int prev_theme = _config.theme;
+    String prev_theme_key = _config.theme_key;
     _config.refresh(getResources(), _foldStateTracker.isUnfolded(), _dictionaries);
     refresh_current_dictionary();
-    // Refreshing the theme config requires re-creating the views
-    if (prev_theme != _config.theme)
+    // Refreshing the theme config requires re-creating the views. The key is
+    // compared as well as the style: two custom themes can share a base theme
+    // and thus resolve to the same style.
+    if (prev_theme != _config.theme || !prev_theme_key.equals(_config.theme_key))
     {
       create_keyboard_view();
       _emojiPane = null;
@@ -447,13 +452,23 @@ public class Keyboard2 extends InputMethodService
 
         case SWITCH_EMOJI:
           if (_emojiPane == null)
+          {
             _emojiPane = (ViewGroup)inflate_view(R.layout.emoji_pane);
+            ThemeApplier.background(_emojiPane,
+                _config.custom_theme, ThemeSpec.Role.colorKeyboard);
+            ThemeApplier.background(_emojiPane.findViewById(R.id.emoji_grid),
+                _config.custom_theme, ThemeSpec.Role.colorKeyboard);
+          }
           setInputView(_emojiPane);
           break;
 
         case SWITCH_CLIPBOARD:
           if (_clipboard_pane == null)
+          {
             _clipboard_pane = (ViewGroup)inflate_view(R.layout.clipboard_pane);
+            ThemeApplier.background(_clipboard_pane,
+                _config.custom_theme, ThemeSpec.Role.colorKeyboard);
+          }
           setInputView(_clipboard_pane);
           break;
 

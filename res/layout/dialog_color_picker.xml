@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The colour picker of the custom theme editor. The hex field is given an
+     explicit text colour: relying on the dialog theme left it invisible. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+  <!-- Current colour, large, so that the effect of a change is obvious. -->
+  <View
+      android:id="@+id/colour_preview"
+      android:layout_width="match_parent"
+      android:layout_height="56dp"
+      android:layout_marginBottom="12dp"/>
+
+  <TextView
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="@string/color_picker_hex"
+      android:textSize="12sp"
+      android:alpha="0.7"/>
+
+  <EditText
+      android:id="@+id/hex_field"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:minHeight="48dp"
+      android:inputType="textNoSuggestions"
+      android:imeOptions="actionDone"
+      android:maxLines="1"
+      android:hint="#rrggbb"
+      android:textColor="#ffffffff"
+      android:textColorHint="#ff888888"
+      android:textSize="18sp"/>
+
+  <TextView
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginTop="8dp"
+      android:text="@string/color_picker_hue"
+      android:textSize="12sp"
+      android:alpha="0.7"/>
+
+  <juloo.keyboard2.ColorHueBar
+      android:id="@+id/hue_bar"
+      android:layout_width="match_parent"
+      android:layout_height="36dp"/>
+
+  <TextView
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginTop="8dp"
+      android:text="@string/color_picker_opacity"
+      android:textSize="12sp"
+      android:alpha="0.7"/>
+
+  <juloo.keyboard2.ColorAlphaBar
+      android:id="@+id/alpha_bar"
+      android:layout_width="match_parent"
+      android:layout_height="36dp"/>
+
+  <juloo.keyboard2.ColorSVSquare
+      android:id="@+id/sv_square"
+      android:layout_width="match_parent"
+      android:layout_height="170dp"
+      android:layout_marginTop="12dp"/>
+
+</LinearLayout>

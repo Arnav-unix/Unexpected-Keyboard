@@ -8,44 +8,70 @@ import android.graphics.Paint;
 import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 
 public class Theme
 {
   // Key colors
-  public final int colorKey;
-  public final int colorKeyActivated;
-  public final int colorKeyAction;
-  public final int colorKeySpaceBar;
+  public int colorKey;
+  public int colorKeyActivated;
+  public int colorKeyAction;
+  public int colorKeySpaceBar;
+
+  /** Background behind the keys. Read from the theme so that custom themes
+      can override it, as it is not drawn on the keyboard view itself. */
+  public int colorKeyboard;
 
   // Optional keyboard background gradient
-  public final boolean hasKeyboardGradient;
-  public final int keyboardGradientStart;
-  public final int keyboardGradientEnd;
+  public boolean hasKeyboardGradient;
+  public int keyboardGradientStart;
+  public int keyboardGradientEnd;
 
   // Label colors
-  public final int lockedColor;
-  public final int activatedColor;
-  public final int pressedColor;
-  public final int labelColor;
-  public final int subLabelColor;
-  public final int secondaryLabelColor;
-  public final int greyedLabelColor;
+  public int lockedColor;
+  public int activatedColor;
+  public int pressedColor;
+  public int labelColor;
+  public int subLabelColor;
+  public int secondaryLabelColor;
+  public int greyedLabelColor;
+
+  /** Colours of the emoji pane and the clipboard pane. Those views are
+      inflated with theme attributes, they are read here so that custom themes
+      can override them too. */
+  public int emojiButtonBg;
+  public int emojiColor;
+  public int emojiKeyBg;
+  public int emojiKeyText;
+  public int clipboardDividerColor;
 
   // Key borders
-  public final float keyBorderRadius;
+  public float keyBorderRadius;
   public final float keyBorderWidth;
   public final float keyBorderWidthActivated;
   public final float keyBorderWidthAction;
   public final float keyBorderWidthSpaceBar;
-  public final int keyBorderColorLeft;
-  public final int keyBorderColorTop;
-  public final int keyBorderColorRight;
-  public final int keyBorderColorBottom;
+  public int keyBorderColorLeft;
+  public int keyBorderColorTop;
+  public int keyBorderColorRight;
+  public int keyBorderColorBottom;
 
-  public final int colorNavBar;
-  public final boolean isLightNavBar;
+  public int colorNavBar;
+  public boolean isLightNavBar;
+
+  /** [secondaryDimming] and [greyedDimming], kept to recompute the derived
+      label colours when a custom theme overrides [colorLabel]. */
+  private final float _secondaryDimming;
+  private final float _greyedDimming;
 
   public Theme(Context context, AttributeSet attrs)
+  {
+    this(context, attrs, null);
+  }
+
+  /** [spec] is the active custom theme, or [null] to use the colours of the
+      XML style only. */
+  public Theme(Context context, AttributeSet attrs, ThemeSpec spec)
   {
     getKeyFont(context); // _key_font will be accessed
     TypedArray s = context.getTheme().obtainStyledAttributes(attrs, R.styleable.keyboard, 0, 0);
@@ -56,7 +82,7 @@ public class Theme
     colorKeyActivated = s.getColor(R.styleable.keyboard_colorKeyActivated, 0);
     colorKeyAction = s.getColor(R.styleable.keyboard_colorKeyAction, colorKey);
     colorKeySpaceBar = s.getColor(R.styleable.keyboard_colorKeySpaceBar, colorKey);
-    // colorKeyboard = s.getColor(R.styleable.keyboard_colorKeyboard, 0);
+    colorKeyboard = s.getColor(R.styleable.keyboard_colorKeyboard, 0);
     colorNavBar = s.getColor(R.styleable.keyboard_navigationBarColor, 0);
     isLightNavBar = s.getBoolean(R.styleable.keyboard_windowLightNavigationBar, false);
     labelColor = s.getColor(R.styleable.keyboard_colorLabel, 0);
@@ -64,10 +90,15 @@ public class Theme
     pressedColor = s.getColor(R.styleable.keyboard_colorLabelPressed, labelColor);
     lockedColor = s.getColor(R.styleable.keyboard_colorLabelLocked, 0);
     subLabelColor = s.getColor(R.styleable.keyboard_colorSubLabel, 0);
-    secondaryLabelColor = adjustLight(labelColor,
-        s.getFloat(R.styleable.keyboard_secondaryDimming, 0.25f));
-    greyedLabelColor = adjustLight(labelColor,
-        s.getFloat(R.styleable.keyboard_greyedDimming, 0.5f));
+    _secondaryDimming = s.getFloat(R.styleable.keyboard_secondaryDimming, 0.25f);
+    _greyedDimming = s.getFloat(R.styleable.keyboard_greyedDimming, 0.5f);
+    secondaryLabelColor = adjustLight(labelColor, _secondaryDimming);
+    greyedLabelColor = adjustLight(labelColor, _greyedDimming);
+    emojiButtonBg = s.getColor(R.styleable.keyboard_emoji_button_bg, 0);
+    emojiColor = s.getColor(R.styleable.keyboard_emoji_color, 0);
+    emojiKeyBg = s.getColor(R.styleable.keyboard_emoji_key_bg, emojiButtonBg);
+    emojiKeyText = s.getColor(R.styleable.keyboard_emoji_key_text, labelColor);
+    clipboardDividerColor = s.getColor(R.styleable.keyboard_clipboard_divider_color, colorKey);
     keyBorderRadius = s.getDimension(R.styleable.keyboard_keyBorderRadius, 0);
     keyBorderWidth = s.getDimension(R.styleable.keyboard_keyBorderWidth, 0);
     keyBorderWidthActivated = s.getDimension(R.styleable.keyboard_keyBorderWidthActivated, 0);
@@ -78,6 +109,54 @@ public class Theme
     keyBorderColorRight = s.getColor(R.styleable.keyboard_keyBorderColorRight, colorKey);
     keyBorderColorBottom = s.getColor(R.styleable.keyboard_keyBorderColorBottom, colorKey);
     s.recycle();
+    if (spec != null)
+      apply_spec(context, spec);
+  }
+
+  /** Override the colours read from the XML style with the ones from the
+      custom theme [spec]. */
+  void apply_spec(Context context, ThemeSpec spec)
+  {
+    for (ThemeSpec.Role role : ThemeSpec.Role.values())
+    {
+      Integer c = spec.colors.get(role);
+      if (c == null)
+        continue;
+      int color = c.intValue();
+      switch (role)
+      {
+        case colorKeyboard: colorKeyboard = color; break;
+        case colorKey: colorKey = color; break;
+        case colorKeyActivated: colorKeyActivated = color; break;
+        case colorKeyAction: colorKeyAction = color; break;
+        case colorKeySpaceBar: colorKeySpaceBar = color; break;
+        case colorLabel: labelColor = color; break;
+        case colorLabelActivated: activatedColor = color; break;
+        case colorLabelPressed: pressedColor = color; break;
+        case colorLabelLocked: lockedColor = color; break;
+        case colorSubLabel: subLabelColor = color; break;
+        case emojiButtonBg: emojiButtonBg = color; break;
+        case emojiColor: emojiColor = color; break;
+        case emojiKeyBg: emojiKeyBg = color; break;
+        case emojiKeyText: emojiKeyText = color; break;
+        case clipboardDividerColor: clipboardDividerColor = color; break;
+        case keyBorderColorLeft: keyBorderColorLeft = color; break;
+        case keyBorderColorTop: keyBorderColorTop = color; break;
+        case keyBorderColorRight: keyBorderColorRight = color; break;
+        case keyBorderColorBottom: keyBorderColorBottom = color; break;
+      }
+    }
+    if (spec.keyBorderRadiusDp != null)
+      keyBorderRadius = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
+          spec.keyBorderRadiusDp.intValue(), context.getResources().getDisplayMetrics());
+    // The dimmed label colours are derived from [labelColor] and must follow it.
+    secondaryLabelColor = adjustLight(labelColor, _secondaryDimming);
+    greyedLabelColor = adjustLight(labelColor, _greyedDimming);
+    // An overridden label colour must not leave the emoji grid unreadable.
+    if (!spec.colors.containsKey(ThemeSpec.Role.emojiKeyText))
+      emojiKeyText = labelColor;
+    if (!spec.colors.containsKey(ThemeSpec.Role.emojiKeyBg))
+      emojiKeyBg = emojiButtonBg;
   }
 
   /** Interpolate the 'value' component toward its opposite by 'alpha'. */

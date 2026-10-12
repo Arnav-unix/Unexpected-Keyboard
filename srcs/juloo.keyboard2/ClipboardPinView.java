@@ -110,7 +110,11 @@ public final class ClipboardPinView extends NonScrollListView
     public View getView(final int pos, View v, ViewGroup _parent)
     {
       if (v == null)
+      {
         v = View.inflate(getContext(), R.layout.clipboard_pin_entry, null);
+        ThemeApplier.text(v.findViewById(R.id.clipboard_pin_text),
+            Config.globalConfig().custom_theme, ThemeSpec.Role.colorLabel);
+      }
       ((TextView)v.findViewById(R.id.clipboard_pin_text))
         .setText(_entries.get(pos));
       v.findViewById(R.id.clipboard_pin_paste).setOnClickListener(

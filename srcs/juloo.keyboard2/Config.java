@@ -13,6 +13,7 @@ import juloo.keyboard2.dict.Dictionaries;
 import juloo.keyboard2.prefs.CustomExtraKeysPreference;
 import juloo.keyboard2.prefs.ExtraKeysPreference;
 import juloo.keyboard2.prefs.LayoutsPreference;
+import juloo.keyboard2.prefs.ThemesPreference;
 
 public final class Config
 {
@@ -68,6 +69,12 @@ public final class Config
   public boolean double_tap_lock_shift;
   public float characterSize; // Ratio
   public int theme; // Values are R.style.*
+  /** The value of the "theme" preference. Changes to it require the views to
+      be re-created, even when [theme] stays the same, because two custom
+      themes can share a base theme. */
+  public String theme_key;
+  /** The active custom theme, or [null] when a built-in theme is used. */
+  public ThemeSpec custom_theme;
   public boolean autocapitalisation;
   public KeyValue change_method_key_replacement;
   public NumberLayout selected_number_layout;
@@ -190,7 +197,9 @@ public final class Config
     characterSize =
       _prefs.getFloat("character_size", 1.15f)
       * characterSizeScale;
-    theme = getThemeId(res, _prefs.getString("theme", ""));
+    theme_key = _prefs.getString("theme", "");
+    custom_theme = ThemesPreference.custom_theme_of(_prefs, theme_key);
+    theme = getThemeId(res, theme_key);
     autocapitalisation = _prefs.getBoolean("autocapitalisation", true);
     change_method_key_replacement = get_change_method_key_replacement(_prefs);
     extra_keys_param = ExtraKeysPreference.get_extra_keys(_prefs);
@@ -257,8 +266,26 @@ public final class Config
     return get_dip_pref(dm, pref_base_name + suffix, def);
   }
 
-  private int getThemeId(Resources res, String theme_name)
+  int getThemeId(Resources res, String theme_name)
   {
+    return theme_style_id(res, theme_name, _prefs);
+  }
+
+  /** The [R.style] of a theme by name. [prefs] is only used to look up custom
+      themes, it may be [null]. Public so that the theme editor can build a
+      [Theme] out of a built-in theme to show its colours. */
+  public static int theme_style_id(Resources res, String theme_name,
+      SharedPreferences prefs)
+  {
+    // A custom theme is drawn on top of the built-in theme it is based on.
+    if (theme_name != null && theme_name.startsWith(ThemesPreference.CUSTOM_PREFIX))
+    {
+      ThemeSpec spec = (prefs == null) ? null
+        : ThemesPreference.custom_theme_of(prefs, theme_name);
+      if (spec != null)
+        return theme_style_id(res, spec.base, prefs);
+      // The custom theme is gone, fall through to the default theme.
+    }
     int night_mode = res.getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
     switch (theme_name)
     {
